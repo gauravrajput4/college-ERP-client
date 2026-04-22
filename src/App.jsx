@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
+import useGlobalButtonGuard from "./hooks/useGlobalButtonGuard";
 
 import Home from "./pages/public/Home";
 import About from "./pages/public/About";
@@ -48,73 +49,77 @@ const Unauthorized = () => (
   </div>
 );
 
-const App = () => (
-  <Routes>
-    <Route path="/" element={<Home />} />
-    <Route path="/about" element={<About />} />
-    <Route path="/gallery" element={<Gallery />} />
-    <Route path="/contact" element={<Contact />} />
-    <Route path="/admission" element={<Admission />} />
-    <Route path="/tour" element={<Tour />} />
+const App = () => {
+  useGlobalButtonGuard();
 
-    <Route path="/login" element={<Login />} />
-    <Route path="/forgot-password" element={<ForgotPassword />} />
-    <Route path="/unauthorized" element={<Unauthorized />} />
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/gallery" element={<Gallery />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/admission" element={<Admission />} />
+      <Route path="/tour" element={<Tour />} />
 
-    <Route
-      path="/teacher"
-      element={
-        <ProtectedRoute role="teacher">
-          <TeacherLayout />
-        </ProtectedRoute>
-      }
-    >
-      <Route path="dashboard" element={<TeacherDashboard />} />
-      <Route path="attendance" element={<MarkAttendance />} />
-      <Route path="material" element={<UploadMaterial />} />
-      <Route path="result" element={<UploadResult />} />
-      <Route path="profile" element={<TeacherProfile />} />
-    </Route>
+      <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
 
-    <Route
-      path="/student"
-      element={
-        <ProtectedRoute role="student">
-          <StudentLayout />
-        </ProtectedRoute>
-      }
-    >
-      <Route path="dashboard" element={<StudentDashboard />} />
-      <Route path="attendance" element={<Attendance />} />
-      <Route path="results" element={<Results />} />
-      <Route path="fees" element={<Fees />} />
-      <Route path="materials" element={<StudyMaterial />} />
-      <Route path="exams" element={<ExamSchedule />} />
-      <Route path="profile" element={<StudentProfile />} />
-    </Route>
+      <Route
+        path="/teacher"
+        element={
+          <ProtectedRoute role="teacher">
+            <TeacherLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="dashboard" element={<TeacherDashboard />} />
+        <Route path="attendance" element={<MarkAttendance />} />
+        <Route path="material" element={<UploadMaterial />} />
+        <Route path="result" element={<UploadResult />} />
+        <Route path="profile" element={<TeacherProfile />} />
+      </Route>
 
-    <Route
-      path="/admin"
-      element={
-        <ProtectedRoute role="admin">
-          <AdminLayout />
-        </ProtectedRoute>
-      }
-    >
-      <Route path="dashboard" element={<AdminDashboard />} />
-      <Route path="students" element={<ManageStudents />} />
-      <Route path="teachers" element={<ManageTeachers />} />
-      <Route path="timetable" element={<TimetableManagement />} />
-      <Route path="fees" element={<FeeManagement />} />
-      <Route path="results" element={<ResultsOverview />} />
-      <Route path="notices" element={<NoticeBoard />} />
-      <Route path="gallery" element={<GalleryManage />} />
-      <Route path="enquiries" element={<Enquiries />} />
-      <Route path="profile" element={<AdminProfile />} />
-    </Route>
+      <Route
+        path="/student"
+        element={
+          <ProtectedRoute role="student">
+            <StudentLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="dashboard" element={<StudentDashboard />} />
+        <Route path="attendance" element={<Attendance />} />
+        <Route path="results" element={<Results />} />
+        <Route path="fees" element={<Fees />} />
+        <Route path="materials" element={<StudyMaterial />} />
+        <Route path="exams" element={<ExamSchedule />} />
+        <Route path="profile" element={<StudentProfile />} />
+      </Route>
 
-    <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes>
-);
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute role="admin">
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="students" element={<ManageStudents />} />
+        <Route path="teachers" element={<ManageTeachers />} />
+        <Route path="timetable" element={<TimetableManagement />} />
+        <Route path="fees" element={<FeeManagement />} />
+        <Route path="results" element={<ResultsOverview />} />
+        <Route path="notices" element={<NoticeBoard />} />
+        <Route path="gallery" element={<GalleryManage />} />
+        <Route path="enquiries" element={<Enquiries />} />
+        <Route path="profile" element={<AdminProfile />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
 
 export default App;

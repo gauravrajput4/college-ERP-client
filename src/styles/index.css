@@ -30,3 +30,29 @@ h2,
 h3 {
   font-family: "Playfair Display", serif;
 }
+
+button[data-global-loading="true"] {
+  position: relative;
+  opacity: 0.8;
+  cursor: progress !important;
+  pointer-events: none;
+}
+
+button[data-global-loading="true"]::after {
+  content: "";
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-left: 0.45rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 9999px;
+  vertical-align: -0.12em;
+  animation: global-btn-spin 0.8s linear infinite;
+}
+
+@keyframes global-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

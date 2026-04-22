@@ -5,6 +5,8 @@ export const getAttendance = async (params) => (await api.get("/student/attendan
 export const getResults = async (params) => (await api.get("/student/results", { params })).data;
 export const getFees = async () => (await api.get("/student/fees")).data;
 export const createPayNowOrder = async (data) => (await api.post("/student/fees/pay-now", data)).data;
+export const verifyPayNowOrder = async (data) => (await api.post("/student/fees/pay-now/verify", data)).data;
+export const updatePayNowOrderStatus = async (data) => (await api.post("/student/fees/pay-now/status", data)).data;
 export const downloadReceipt = async (receiptNo) =>
   await api.get(`/student/fees/receipt/${receiptNo}`, {
     responseType: "blob",

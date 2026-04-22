@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { createPayNowOrder, downloadReceipt, getFees } from "../../api/student.api";
+import {
+  createPayNowOrder,
+  downloadReceipt,
+  getFees,
+  updatePayNowOrderStatus,
+  verifyPayNowOrder,
+} from "../../api/student.api";
 import useFetch from "../../hooks/useFetch";
 import Table from "../../components/Table";
 import Loader from "../../components/Loader";
@@ -81,12 +87,55 @@ const Fees = () => {
           order_id: order.orderId,
           prefill: order.prefill,
           theme: { color: "#1a237e" },
-          handler: async () => {
-            showSuccess("Payment received. Waiting for gateway confirmation.");
-            setTimeout(() => {
-              feesState.execute();
-            }, 4000);
+          modal: {
+            ondismiss: async () => {
+              try {
+                await updatePayNowOrderStatus({
+                  orderId: order.orderId,
+                  status: "pending",
+                  reason: "Student closed the payment popup before completion",
+                });
+              } catch {
+                // Ignored because webhook reconciliation can still update status.
+              }
+              showError("Payment popup closed. You can retry.");
+            },
           },
+          handler: async (response) => {
+            try {
+              const verifyResponse = await verifyPayNowOrder({
+                orderId: response.razorpay_order_id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+              });
+
+              const verificationStatus = verifyResponse?.data?.status;
+              if (verificationStatus === "pending") {
+                showSuccess("Payment received and awaiting capture confirmation.");
+              } else {
+                showSuccess("Payment verified successfully. Receipt generated.");
+              }
+              await feesState.execute();
+            } catch (verificationError) {
+              showError(verificationError?.response?.data?.message || "Payment verification failed");
+              await feesState.execute();
+            }
+          },
+        });
+        razorpay.on("payment.failed", async (event) => {
+          const gatewayMeta = event?.error?.metadata || {};
+          try {
+            await updatePayNowOrderStatus({
+              orderId: gatewayMeta.order_id || order.orderId,
+              paymentId: gatewayMeta.payment_id || "",
+              status: "failed",
+              reason: event?.error?.description || event?.error?.reason || "Payment failed at gateway",
+            });
+          } catch {
+            // Ignored because webhook reconciliation can still update status.
+          }
+          showError(event?.error?.description || "Payment failed. Please retry.");
+          await feesState.execute();
         });
         razorpay.open();
         return;
@@ -200,10 +249,19 @@ const Fees = () => {
             columns={[
               { key: "date", title: "Date", render: (row) => new Date(row.date).toLocaleDateString() },
               { key: "amount", title: "Amount" },
-              { key: "receiptNo", title: "Receipt No" },
+              { key: "receiptNo", title: "Receipt No", render: (row) => row.receiptNo || "-" },
               { key: "mode", title: "Mode" },
               { key: "provider", title: "Provider", render: (row) => row.gateway || "-" },
-              { key: "status", title: "Status", render: () => data?.status || "-" },
+              {
+                key: "status",
+                title: "Status",
+                render: (row) =>
+                  row.providerTransactionStatus === "failed"
+                    ? "Failed"
+                    : row.providerTransactionStatus === "pending"
+                      ? "Pending"
+                      : "Paid",
+              },
               {
                 key: "print",
                 title: "Action",
@@ -211,6 +269,7 @@ const Fees = () => {
                   <button
                     type="button"
                     onClick={() => handleDownloadReceipt(row.receiptNo)}
+                    disabled={!row.receiptNo}
                     className="rounded border px-3 py-1 text-sm"
                   >
                     Print Receipt

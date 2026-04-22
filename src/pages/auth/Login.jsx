@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Eye, EyeOff, GraduationCap, BookOpen, Shield, User, Lock } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal";
@@ -23,19 +23,25 @@ const Login = () => {
     const [remember,     setRemember]     = useState(false);
     const [form,         setForm]         = useState({ email: "", password: "" });
     const [loading,      setLoading]      = useState(false);
+    const [roleSwitching,setRoleSwitching]= useState("");
+    const [forgotLoading,setForgotLoading]= useState(false);
     const [forgotOpen,   setForgotOpen]   = useState(false);
     const [forgotEmail,  setForgotEmail]  = useState("");
     const [focused,      setFocused]      = useState(null);
+    const submitLockRef = useRef(false);
+    const forgotLockRef = useRef(false);
 
     const handleChange = (e) =>
         setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (submitLockRef.current || loading) return;
         if (!form.email || !form.password) {
             showError("Institutional ID and password are required");
             return;
         }
+        submitLockRef.current = true;
         try {
             setLoading(true);
             await login({ ...form, role });
@@ -50,19 +56,33 @@ const Login = () => {
             showError(error?.response?.data?.message || "Login failed");
         } finally {
             setLoading(false);
+            submitLockRef.current = false;
         }
     };
 
     const handleForgotPassword = async () => {
+        if (forgotLockRef.current || forgotLoading) return;
         if (!forgotEmail) { showError("Email is required"); return; }
+        forgotLockRef.current = true;
         try {
+            setForgotLoading(true);
             await forgotPassword(forgotEmail);
             showSuccess("OTP sent to your email");
             setForgotOpen(false);
             navigate("/forgot-password");
         } catch (error) {
             showError(error?.response?.data?.message || "Failed to send OTP");
+        } finally {
+            setForgotLoading(false);
+            forgotLockRef.current = false;
         }
+    };
+
+    const handleRoleChange = (nextRole) => {
+        if (loading || roleSwitching) return;
+        setRole(nextRole);
+        setRoleSwitching(nextRole);
+        window.setTimeout(() => setRoleSwitching(""), 350);
     };
 
     // Input style helper
@@ -227,6 +247,7 @@ const Login = () => {
           box-shadow: 0 4px 16px rgba(26,35,126,0.30);
         }
         .login-role-btn.active svg { color: #f9a825; }
+        .login-role-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
         /* ── Form fields ── */
         .login-field { position: relative; margin-bottom: 14px; }
@@ -250,6 +271,7 @@ const Login = () => {
           transition: color 0.15s;
         }
         .login-eye-btn:hover { color: #1a237e; }
+        .login-eye-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* ── Remember + Forgot ── */
         .login-meta {
@@ -273,6 +295,7 @@ const Login = () => {
           text-decoration: none; transition: color 0.15s;
         }
         .login-forgot:hover { color: #f9a825; }
+        .login-forgot:disabled { opacity: 0.6; cursor: not-allowed; }
 
         /* ── Submit button ── */
         .login-submit {
@@ -364,6 +387,7 @@ const Login = () => {
           cursor: pointer; transition: background 0.2s;
         }
         .forgot-modal-btn:hover { background: #283593; }
+        .forgot-modal-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
         /* ── Spinner ── */
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -421,11 +445,21 @@ const Login = () => {
                                     key={id}
                                     type="button"
                                     className={`login-role-btn${role === id ? " active" : ""}`}
-                                    onClick={() => setRole(id)}
+                                    onClick={() => handleRoleChange(id)}
+                                    disabled={loading || Boolean(roleSwitching)}
                                     aria-pressed={role === id}
                                 >
-                                    <Icon size={22} strokeWidth={2} />
-                                    {label}
+                                    {((loading && role === id) || roleSwitching === id) ? (
+                                        <>
+                                            <span className="spin" style={{ width: 16, height: 16 }} />
+                                            {loading ? "LOADING..." : "SELECTING..."}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Icon size={22} strokeWidth={2} />
+                                            {label}
+                                        </>
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -481,6 +515,7 @@ const Login = () => {
                                     type="button"
                                     className="login-eye-btn"
                                     onClick={() => setShowPassword((v) => !v)}
+                                    disabled={loading}
                                     aria-label={showPassword ? "Hide password" : "Show password"}
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -501,6 +536,7 @@ const Login = () => {
                                     type="button"
                                     className="login-forgot"
                                     onClick={() => setForgotOpen(true)}
+                                    disabled={loading}
                                 >
                                     Forgot Access Code?
                                 </button>
@@ -570,8 +606,13 @@ const Login = () => {
                     type="button"
                     className="forgot-modal-btn"
                     onClick={handleForgotPassword}
+                    disabled={forgotLoading}
                 >
-                    Send OTP →
+                    {forgotLoading ? (
+                        <><span className="spin" style={{ width: 14, height: 14 }} /> Sending...</>
+                    ) : (
+                        <>Send OTP →</>
+                    )}
                 </button>
                 <p style={{ textAlign: "center", marginTop: "10px", fontSize: "0.78rem", color: "#9ca3af" }}>
                     Check your spam folder if you don't see it within 2 minutes.
