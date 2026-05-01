@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+  <rect width="160" height="160" rx="28" fill="#1A237E"/>
+  <circle cx="80" cy="80" r="54" fill="#F9A825" opacity="0.16"/>
+  <path d="M80 34L123 54L80 74L37 54L80 34Z" fill="#F9A825"/>
+  <path d="M51 66V95C51 111 64 124 80 124C96 124 109 111 109 95V66L80 79L51 66Z" fill="#F9A825"/>
+  <circle cx="80" cy="92" r="10" fill="#1A237E"/>
+  <text x="80" y="148" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">
+    BJP IC
+  </text>
+</svg>
+

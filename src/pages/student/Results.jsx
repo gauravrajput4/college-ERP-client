@@ -1,6 +1,4 @@
 import { useMemo, useState } from "react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { getResults } from "../../api/student.api";
 import useFetch from "../../hooks/useFetch";
 import Loader from "../../components/Loader";
@@ -13,7 +11,12 @@ const Results = () => {
 
   const results = useMemo(() => resultsState.data?.results || [], [resultsState.data]);
   const summary = resultsState.data?.summary || {};
-  const percentage = Number(summary.percentage || 0);
+  const percentage = useMemo(() => Number(summary.percentage || 0), [summary.percentage]);
+  const performanceBand = useMemo(() => {
+    if (percentage >= 90) return "Outstanding";
+    if (percentage >= 75) return "Strong";
+    return "Needs Improvement";
+  }, [percentage]);
   const badgeTone =
     percentage >= 90
       ? "bg-emerald-100 text-emerald-700"
@@ -21,7 +24,11 @@ const Results = () => {
         ? "bg-indigo-100 text-indigo-700"
         : "bg-amber-100 text-amber-700";
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import(/* webpackChunkName: "vendor-pdf" */ "jspdf"),
+      import(/* webpackChunkName: "vendor-pdf" */ "jspdf-autotable"),
+    ]);
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text("Student Report Card", 14, 16);
@@ -81,12 +88,12 @@ const Results = () => {
               <p className="mt-2 text-3xl font-bold text-primary">{percentage}%</p>
             </div>
             <div className="rounded-xl bg-white p-5 shadow-card">
-              <p className="text-xs uppercase tracking-widest text-slate-500">Performance Band</p>
-              <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-sm font-bold ${badgeTone}`}>
-                {percentage >= 90 ? "Outstanding" : percentage >= 75 ? "Strong" : "Needs Improvement"}
-              </span>
+                <p className="text-xs uppercase tracking-widest text-slate-500">Performance Band</p>
+                <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-sm font-bold ${badgeTone}`}>
+                  {performanceBand}
+                </span>
+              </div>
             </div>
-          </div>
 
           <div className="overflow-hidden rounded-xl bg-white shadow-card">
             <div className="border-b bg-slate-50 px-5 py-4">

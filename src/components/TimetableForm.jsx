@@ -9,7 +9,6 @@ const TimetableForm = ({
   classOptions = [],
   subjectOptions = [],
   availableTeachers = [],
-  unavailableTeachers = [],
   teacherLoading = false,
   submitLabel = "Save Timetable",
 }) => {
@@ -53,6 +52,16 @@ const TimetableForm = ({
         </div>
 
         <div className="space-y-2">
+          <label className="block text-sm font-semibold text-slate-700">Section (Optional)</label>
+          <input
+            value={form.section || ""}
+            onChange={(event) => onChange("section", event.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-primary"
+            placeholder="A"
+          />
+        </div>
+
+        <div className="space-y-2">
           <label className="block text-sm font-semibold text-slate-700">Day</label>
           <select
             value={form.day}
@@ -86,9 +95,8 @@ const TimetableForm = ({
           value={form.teacherId}
           onChange={(event) => onChange("teacherId", event.target.value)}
           availableTeachers={availableTeachers}
-          unavailableTeachers={unavailableTeachers}
           loading={teacherLoading}
-          disabled={!form.className || !form.subject || !form.day || !form.startTime}
+          disabled={!form.day || !form.startTime}
         />
 
         <div className="space-y-2">

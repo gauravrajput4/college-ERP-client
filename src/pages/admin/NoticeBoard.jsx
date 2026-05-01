@@ -1,19 +1,28 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import {
   createNotice,
   deleteNotice,
   getNotices,
   updateNotice,
 } from "../../api/admin.api";
+import { useNavigate } from "react-router-dom";
 import useFetch from "../../hooks/useFetch";
-import Loader from "../../components/Loader";
 import Modal from "../../components/Modal";
+import ErrorState from "../../components/common/ErrorState";
 import { showError, showSuccess } from "../../components/Toast";
+import { EmptyState, EmptyGenericIllustration } from "../../components/empty";
+import NoticeItem from "../../components/notices/NoticeItem";
+import { NoticeBoardSkeleton, SkeletonWrapper } from "../../components/skeleton";
+import useDeferredSkeleton from "../../hooks/useDeferredSkeleton";
+import { AuthContext } from "../../context/AuthContext";
 
 const defaultNotice = { title: "", content: "", targetAudience: "All", isActive: true };
 
 const NoticeBoard = () => {
+  const navigate = useNavigate();
+  const { role } = useContext(AuthContext);
   const noticesState = useFetch(getNotices, []);
+  const showSkeleton = useDeferredSkeleton(noticesState.loading, 300);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(defaultNotice);
@@ -76,30 +85,27 @@ const NoticeBoard = () => {
         </button>
       </div>
 
-      {noticesState.loading ? (
-        <Loader />
+      {showSkeleton ? (
+        <SkeletonWrapper loading>
+          <NoticeBoardSkeleton />
+        </SkeletonWrapper>
+      ) : noticesState.error ? (
+        <ErrorState error={noticesState.error} onRetry={noticesState.execute} onGoHome={() => navigate("/admin")} />
+      ) : !(noticesState.data || []).length ? (
+        <EmptyState
+          illustration={<EmptyGenericIllustration />}
+          title={role === "Admin" ? "No notices published" : "All clear — no notices"}
+          description={
+            role === "Admin"
+              ? "Keep everyone informed. Post your first notice to students and faculty."
+              : "No announcements right now. Check back later for updates from admin."
+          }
+          action={role === "Admin" ? { label: "Create Notice", onClick: openCreate } : undefined}
+        />
       ) : (
         <div className="space-y-3">
           {(noticesState.data || []).map((notice) => (
-            <div key={notice._id} className="rounded-xl bg-white p-4 shadow-card">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-semibold text-primary">{notice.title}</h3>
-                  <p className="text-sm text-slate-600">{notice.content}</p>
-                  <p className="text-xs text-slate-500">
-                    Audience: {notice.targetAudience} | {notice.isActive ? "Active" : "Inactive"}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => openEdit(notice)} className="rounded border px-3 py-1 text-sm">
-                    Edit
-                  </button>
-                  <button onClick={() => remove(notice._id)} className="rounded border px-3 py-1 text-sm text-rose-600">
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
+            <NoticeItem key={notice._id} notice={notice} onEdit={openEdit} onDelete={remove} />
           ))}
         </div>
       )}

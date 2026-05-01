@@ -3,6 +3,18 @@ import FileUpload from "./FileUpload";
 import { changePassword, updateProfilePhoto } from "../api/auth.api";
 import { showError, showSuccess } from "./Toast";
 import useAuth from "../hooks/useAuth";
+import OptimizedImage from "./common/OptimizedImage";
+import { getAvatarUrl } from "../utils/cloudinaryUrl";
+
+const resolveProfilePhoto = (photo) => {
+  if (!photo) return "";
+  if (photo.startsWith("http")) return photo;
+  try {
+    return getAvatarUrl(photo, 160);
+  } catch {
+    return "";
+  }
+};
 
 const RoleProfilePanel = ({ roleLabel }) => {
   const { user, loadUser } = useAuth();
@@ -73,7 +85,13 @@ const RoleProfilePanel = ({ roleLabel }) => {
           <h2 className="text-xl font-semibold text-primary">Profile Photo</h2>
           <div className="mt-4 flex items-center gap-4">
             {user?.photo ? (
-              <img src={user.photo} alt={user?.name || "Profile"} className="h-20 w-20 rounded-full border object-cover" />
+              <OptimizedImage
+                src={resolveProfilePhoto(user.photo)}
+                alt={user?.name || "Profile"}
+                width={80}
+                height={80}
+                className="h-20 w-20 rounded-full border"
+              />
             ) : (
               <div className="flex h-20 w-20 items-center justify-center rounded-full border bg-slate-100 text-2xl">
                 {user?.name?.charAt(0)?.toUpperCase() || "U"}

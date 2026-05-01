@@ -5,7 +5,7 @@ const links = [
   { label: "Attendance", to: "/student/attendance" },
   { label: "Results", to: "/student/results" },
   { label: "Fees", to: "/student/fees" },
-  { label: "Study Material", to: "/student/materials" },
+  { label: "Subjects", to: "/student/subjects" },
   { label: "Exam Schedule", to: "/student/exams" },
   { label: "Profile", to: "/student/profile" },
 ];

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import { preloadRouteChunk } from "../router/lazyRoutes";
 
 const navItems = [
   { label: "Home", to: "/" },
@@ -36,6 +37,8 @@ const Navbar = ({ showMenuButton = false, isMenuOpen = false, onMenuToggle }) =>
     return undefined;
   }, [isAuthenticated]);
 
+  const handlePreload = useCallback((to) => preloadRouteChunk(to), []);
+
   return (
     <header className="sticky top-0 z-[60] border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-18 max-w-[1600px] items-center justify-between gap-3 px-4 sm:px-5 lg:px-6">
@@ -46,7 +49,7 @@ const Navbar = ({ showMenuButton = false, isMenuOpen = false, onMenuToggle }) =>
             aria-label="BJP Memorial Inter College"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-lg text-white shadow-lg shadow-primary/20">
-              🎓
+              <img src="/college-logo.svg" alt="College logo" width={32} height={32} className="h-8 w-8" />
             </div>
             <div className="min-w-0">
               <p className="truncate font-heading text-xl text-primary sm:text-2xl">BJP Memorial Inter College</p>
@@ -100,6 +103,7 @@ const Navbar = ({ showMenuButton = false, isMenuOpen = false, onMenuToggle }) =>
                   key={item.to}
                   to={item.to}
                   end={item.to === "/"}
+                  onMouseEnter={() => handlePreload(item.to)}
                   className={({ isActive }) => `${baseLinkClass} ${isActive ? "bg-primary/10 text-primary" : ""}`}
                 >
                   {item.label}
@@ -110,6 +114,7 @@ const Navbar = ({ showMenuButton = false, isMenuOpen = false, onMenuToggle }) =>
             <div className="hidden items-center gap-3 lg:flex">
               <Link
                 to="/login"
+                onMouseEnter={() => handlePreload("/login")}
                 className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-primary transition hover:brightness-95"
               >
                 Login
@@ -147,6 +152,7 @@ const Navbar = ({ showMenuButton = false, isMenuOpen = false, onMenuToggle }) =>
                 key={item.to}
                 to={item.to}
                 end={item.to === "/"}
+                onMouseEnter={() => handlePreload(item.to)}
                 className={({ isActive }) =>
                   `rounded-xl px-4 py-3 text-sm font-semibold transition ${
                     isActive ? "bg-primary text-white" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
@@ -167,4 +173,4 @@ const Navbar = ({ showMenuButton = false, isMenuOpen = false, onMenuToggle }) =>
   );
 };
 
-export default Navbar;
+export default memo(Navbar);

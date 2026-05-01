@@ -37,7 +37,7 @@ const DashboardLayout = ({ roleLabel, sidebarTitle, links, settingsTo, hidePageH
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-page">
       <Navbar
         showMenuButton={!isDesktop}
         isMenuOpen={sidebarOpen}

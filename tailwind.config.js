@@ -6,11 +6,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#1a237e",
-        "primary-light": "#3949ab",
-        accent: "#f9a825",
-        "accent-light": "#fdd835",
-        page: "#f5f6fa",
+        primary: "#7F1D1D",
+        "primary-light": "#991b1b",
+        accent: "#F59E0B",
+        "accent-light": "#fbbf24",
+        page: "#FFF7ED",
       },
       fontFamily: {
         heading: ["Playfair Display", "serif"],

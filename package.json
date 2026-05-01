@@ -6,24 +6,41 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "build:prod": "vite build --mode production",
+    "preview": "vite preview",
+    "analyze": "vite-bundle-visualizer --mode production --template treemap --output ./dist/bundle-stats.html --open false",
+    "images:optimize": "node ./scripts/optimize-images.mjs"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
     "@tailwindcss/forms": "^0.5.9",
+    "@tanstack/react-query": "^5.100.6",
+    "@tanstack/react-query-devtools": "^5.100.6",
     "axios": "^1.7.7",
+    "boneyard": "npm:boneyard-js@^1.8.1",
+    "date-fns": "^4.1.0",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
+    "lodash-es": "^4.17.21",
     "lucide-react": "^0.460.0",
     "react": "^18.3.1",
+    "react-datepicker": "^9.1.0",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
     "react-hot-toast": "^2.4.1",
-    "react-router-dom": "^6.28.0"
+    "react-router-dom": "^6.28.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.4.15",
-    "vite": "^5.4.10"
+    "terser": "^5.46.2",
+    "vite": "^5.4.10",
+    "vite-bundle-visualizer": "^1.2.1",
+    "vite-imagetools": "^7.1.1",
+    "vite-plugin-compression": "^0.5.1"
   }
 }

@@ -2,6 +2,7 @@ import api from "./axios";
 
 export const getDashboard = async () => (await api.get("/student/dashboard")).data;
 export const getAttendance = async (params) => (await api.get("/student/attendance", { params })).data;
+export const getDailyAttendance = async (date) => (await api.get("/attendance", { params: { date } })).data;
 export const getResults = async (params) => (await api.get("/student/results", { params })).data;
 export const getFees = async () => (await api.get("/student/fees")).data;
 export const createPayNowOrder = async (data) => (await api.post("/student/fees/pay-now", data)).data;

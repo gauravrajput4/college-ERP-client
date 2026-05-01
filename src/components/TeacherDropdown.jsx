@@ -2,7 +2,6 @@ const TeacherDropdown = ({
   value,
   onChange,
   availableTeachers = [],
-  unavailableTeachers = [],
   loading = false,
   disabled = false,
 }) => (
@@ -15,27 +14,15 @@ const TeacherDropdown = ({
       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-primary"
       aria-label="Select available teacher"
     >
-      <option value="">{loading ? "Loading teachers..." : "Select available teacher"}</option>
+      <option value="">
+        {loading ? "Fetching available teachers..." : "Select available teacher"}
+      </option>
       {availableTeachers.map((teacher) => (
         <option key={teacher._id} value={teacher._id}>
-          {teacher.name} ({teacher.employeeId})
+          {teacher.name} ({teacher.qualification || teacher.designation || "Teacher"})
         </option>
       ))}
     </select>
-
-    {!!unavailableTeachers.length && (
-      <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-800">
-        <p className="font-semibold">Unavailable at this time</p>
-        <div className="mt-2 space-y-1">
-          {unavailableTeachers.map((teacher) => (
-            <p key={teacher._id}>
-              {teacher.name}: {teacher.conflict?.className} {teacher.conflict?.subject}{" "}
-              {teacher.conflict?.startTime} - {teacher.conflict?.endTime}
-            </p>
-          ))}
-        </div>
-      </div>
-    )}
   </div>
 );
 

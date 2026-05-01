@@ -1,8 +1,14 @@
+import { memo, useCallback } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { preloadRouteChunk } from "../router/lazyRoutes";
 
 const Sidebar = ({ title, links, settingsTo, onLogout, isOpen = false, onClose }) => {
+  const handleRouteHover = useCallback((to) => {
+    preloadRouteChunk(to);
+  }, []);
+
   const shellClassName = [
-    "fixed inset-y-0 left-0 z-50 flex w-[18rem] max-w-[85vw] flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)] lg:w-72 lg:translate-x-0 lg:rounded-2xl lg:shadow-sm",
+    "fixed inset-y-0 left-0 z-50 flex w-[18rem] max-w-[85vw] flex-col border-r border-primary-light bg-primary shadow-2xl transition-transform duration-300 ease-out lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)] lg:w-72 lg:translate-x-0 lg:rounded-2xl lg:shadow-sm text-white",
     isOpen ? "translate-x-0" : "-translate-x-full",
   ].join(" ");
 
@@ -17,10 +23,10 @@ const Sidebar = ({ title, links, settingsTo, onLogout, isOpen = false, onClose }
       />
 
       <aside id="dashboard-sidebar" className={shellClassName} aria-label={`${title} navigation`}>
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">ERP Navigation</p>
-            <h2 className="font-heading text-xl text-primary">{title}</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/50">ERP Navigation</p>
+            <h2 className="font-heading text-xl text-white font-bold">{title}</h2>
           </div>
           <button
             type="button"
@@ -38,11 +44,12 @@ const Sidebar = ({ title, links, settingsTo, onLogout, isOpen = false, onClose }
               key={link.to}
               to={link.to}
               onClick={onClose}
+              onMouseEnter={() => handleRouteHover(link.to)}
               className={({ isActive }) =>
                 `block rounded-xl px-4 py-3 text-sm font-semibold transition ${
                   isActive
-                    ? "bg-primary text-white shadow-lg shadow-primary/20"
-                    : "text-slate-700 hover:bg-slate-100 hover:text-primary"
+                    ? "bg-white/10 text-accent shadow-lg"
+                    : "text-white/70 hover:bg-white/5 hover:text-white"
                 }`
               }
             >
@@ -52,10 +59,10 @@ const Sidebar = ({ title, links, settingsTo, onLogout, isOpen = false, onClose }
         </nav>
 
         {(settingsTo || onLogout) && (
-          <div className="border-t border-slate-200 p-3">
+          <div className="border-t border-white/10 p-3">
             <button
               type="button"
-              className="mb-3 w-full rounded-xl bg-accent/20 px-4 py-3 text-left text-sm font-bold text-primary transition hover:bg-accent/30"
+              className="mb-3 w-full rounded-xl border border-accent/30 px-4 py-3 text-left text-sm font-bold text-accent transition hover:bg-accent/10"
             >
               Support Desk
             </button>
@@ -64,7 +71,8 @@ const Sidebar = ({ title, links, settingsTo, onLogout, isOpen = false, onClose }
               <Link
                 to={settingsTo}
                 onClick={onClose}
-                className="mb-2 block rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-primary"
+                onMouseEnter={() => handleRouteHover(settingsTo)}
+                className="mb-2 block rounded-xl px-4 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/5 hover:text-white"
               >
                 Settings
               </Link>
@@ -74,7 +82,7 @@ const Sidebar = ({ title, links, settingsTo, onLogout, isOpen = false, onClose }
               <button
                 type="button"
                 onClick={onLogout}
-                className="w-full rounded-xl px-4 py-3 text-left text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
+                className="w-full rounded-xl px-4 py-3 text-left text-sm font-semibold text-rose-300 transition hover:bg-rose-500/10"
               >
                 Logout
               </button>
@@ -86,4 +94,4 @@ const Sidebar = ({ title, links, settingsTo, onLogout, isOpen = false, onClose }
   );
 };
 
-export default Sidebar;
+export default memo(Sidebar);

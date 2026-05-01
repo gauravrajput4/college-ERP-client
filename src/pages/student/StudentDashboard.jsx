@@ -1,10 +1,13 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { getAttendance, getDashboard, getExams, getFees, getResults, getTimetable } from "../../api/student.api";
 import Loader from "../../components/Loader";
 import UpcomingLectureCard from "../../components/UpcomingLectureCard";
 import useFetch from "../../hooks/useFetch";
 import useMediaQuery from "../../hooks/useMediaQuery";
+import useAuth from "../../hooks/useAuth";
+import { getStudentAttendance, getStudentMarks } from "../../api/students";
 import {
   getLectureStatus,
   getNextLecture,
@@ -17,6 +20,8 @@ import {
 const weekLabels = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 const StudentDashboard = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
   const now = new Date();
   const month = now.getMonth() + 1;
@@ -41,9 +46,23 @@ const StudentDashboard = () => {
   const timetableEntries = sortTimetableEntries(timetableState.data || []);
   const nextLecture = getNextLecture(timetableEntries);
   const todayLectures = getTodayLectures(timetableEntries);
+  const studentId = user?.studentId || user?._id;
+
+  useEffect(() => {
+    if (!studentId) return;
+    queryClient.prefetchQuery({
+      queryKey: ["students", studentId, "attendance", { month, year }],
+      queryFn: () => getStudentAttendance(studentId, { month, year }),
+    });
+    queryClient.prefetchQuery({
+      queryKey: ["marks", studentId, { semester: "current" }],
+      queryFn: () => getStudentMarks(studentId, { semester: "current" }),
+    });
+  }, [month, queryClient, studentId, year]);
 
   const pendingFee = Number(feeData.pendingAmount ?? stats.pendingFees ?? 0);
   const dueDate = feeData.dueDate ? new Date(feeData.dueDate).toLocaleDateString() : "Not available";
+  const showFeeCard = pendingFee > 0;
 
   const topResult = useMemo(() => {
     if (!results.length) return null;
@@ -105,20 +124,20 @@ const StudentDashboard = () => {
   if (dashboardState.loading) return <Loader text="Loading student dashboard..." />;
 
   return (
-    <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-2xl bg-[#050a7a] px-6 py-7 text-white shadow-xl md:px-8">
+    <div className="space-y-5 sm:space-y-6">
+      <section className="relative overflow-hidden rounded-2xl bg-[#050a7a] px-4 py-5 text-white shadow-xl sm:px-6 sm:py-7 md:px-8">
         <div className="absolute -right-8 -top-8 h-52 w-52 rounded-full bg-white/10 blur-sm" />
-        <div className="relative z-10 flex flex-wrap items-center justify-between gap-5">
-          <div className="flex items-center gap-6">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 sm:gap-5">
+          <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-5">
             <div className="relative">
               {profile.userId?.photo ? (
                 <img
                   src={profile.userId.photo}
                   alt={profile.userId?.name || "Student"}
-                  className="h-32 w-32 rounded-2xl border-4 border-accent object-cover"
+                  className="h-20 w-20 rounded-2xl border-4 border-accent object-cover sm:h-28 sm:w-28 md:h-32 md:w-32"
                 />
               ) : (
-                <div className="flex h-32 w-32 items-center justify-center rounded-2xl border-4 border-accent bg-white/20 text-5xl font-bold">
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-accent bg-white/20 text-3xl font-bold sm:h-28 sm:w-28 sm:text-4xl md:h-32 md:w-32 md:text-5xl">
                   {profile.userId?.name?.charAt(0)?.toUpperCase() || "S"}
                 </div>
               )}
@@ -126,9 +145,9 @@ const StudentDashboard = () => {
                 Active
               </span>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">Welcome Back, Scholar</p>
-              <h1 className="mt-2 font-heading text-4xl">{profile.userId?.name || "Student"}</h1>
+              <h1 className="mt-1 break-words font-heading text-[clamp(1.4rem,5vw,2.25rem)] leading-tight">{profile.userId?.name || "Student"}</h1>
               <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-indigo-100">
                 <span>Roll No: {profile.rollNo || "-"}</span>
                 <span>
@@ -177,11 +196,11 @@ const StudentDashboard = () => {
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-12">
+      <section className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-12">
 
-        <div className="rounded-2xl bg-white p-5 shadow-card sm:p-6 lg:col-span-8">
+        <div className="rounded-2xl bg-white p-4 shadow-card sm:p-6 lg:col-span-8">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-heading text-3xl text-primary">Attendance Tracker</h2>
+            <h2 className="font-heading text-[clamp(1.25rem,4vw,1.875rem)] text-primary">Attendance Tracker</h2>
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <span className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-emerald-500" /> Present
@@ -243,27 +262,27 @@ const StudentDashboard = () => {
             <div className="grid gap-3 sm:grid-cols-3" aria-label="Attendance summary">
               <div className="rounded-2xl bg-emerald-50 p-4">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Present</p>
-                <p className="mt-2 text-3xl font-heading text-emerald-900">{attendanceSummary.present || 0}</p>
+                <p className="mt-2 text-[clamp(1.5rem,6vw,1.875rem)] font-heading text-emerald-900">{attendanceSummary.present || 0}</p>
               </div>
               <div className="rounded-2xl bg-rose-50 p-4">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-700">Absent</p>
-                <p className="mt-2 text-3xl font-heading text-rose-800">{attendanceSummary.absent || 0}</p>
+                <p className="mt-2 text-[clamp(1.5rem,6vw,1.875rem)] font-heading text-rose-800">{attendanceSummary.absent || 0}</p>
               </div>
               <div className="rounded-2xl bg-amber-50 p-4">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700">Leave</p>
-                <p className="mt-2 text-3xl font-heading text-amber-900">{attendanceSummary.leave || 0}</p>
+                <p className="mt-2 text-[clamp(1.5rem,6vw,1.875rem)] font-heading text-amber-900">{attendanceSummary.leave || 0}</p>
               </div>
             </div>
           )}
 
           <div className="mt-6 border-t border-slate-200 pt-5">
             <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-5xl font-heading text-primary">{attendanceSummary.percentage || 0}%</p>
+              <div className="min-w-0">
+                <p className="font-heading text-[clamp(1.75rem,7vw,3rem)] text-primary">{attendanceSummary.percentage || 0}%</p>
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Monthly Average</p>
               </div>
-              <div className="text-left sm:text-right">
-                <p className="text-3xl font-heading text-emerald-900 sm:text-4xl">
+              <div className="min-w-0 text-left sm:text-right">
+                <p className="break-words font-heading text-[clamp(1.3rem,5.5vw,2.25rem)] text-emerald-900">
                   {attendanceSummary.absent || 0} Days Absent
                 </p>
                 <p className="text-sm text-slate-500">
@@ -275,48 +294,50 @@ const StudentDashboard = () => {
         </div>
 
         <div className="space-y-5 lg:col-span-4">
-          <div className="rounded-2xl bg-accent p-6 shadow-lg">
-            <div className="mb-3 flex items-start justify-between">
-              <span className="text-3xl">💳</span>
-              <span className="rounded-full bg-white/40 px-3 py-1 text-xs font-bold uppercase">
-                {feeData.status || "Pending"}
-              </span>
-            </div>
-            <p className="text-5xl font-heading text-[#5a3a00]">₹{pendingFee}</p>
-            <p className="mt-1 text-xl text-[#5a3a00]/90">Tuition & Lab Fees (Q3)</p>
-            <div className="mt-6 flex items-end justify-between border-t border-black/10 pt-4">
-              <div>
-                <p className="text-xs font-bold uppercase text-[#5a3a00]/70">Due Date</p>
-                <p className="text-4xl font-heading text-[#5a3a00]">{dueDate}</p>
+          {showFeeCard ? (
+            <div className="rounded-2xl bg-accent p-[clamp(1rem,3vw,1.5rem)] shadow-lg">
+              <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                <span className="text-[clamp(1.25rem,5vw,1.875rem)]">💳</span>
+                <span className="rounded-full bg-white/40 px-3 py-1 text-xs font-bold uppercase">
+                  {feeData.status || "Pending"}
+                </span>
               </div>
-              <Link
-                to="/student/fees"
-                className="rounded-lg bg-primary px-5 py-2 text-xl font-bold text-white hover:brightness-95"
-              >
-                Pay Now
-              </Link>
+              <p className="break-words font-heading text-[clamp(1.75rem,8vw,3rem)] leading-tight text-[#5a3a00]">₹{pendingFee}</p>
+              <p className="mt-1 break-words text-[clamp(0.95rem,3.2vw,1.25rem)] text-[#5a3a00]/90">Tuition & Lab Fees (Q3)</p>
+              <div className="mt-5 flex flex-col gap-3 border-t border-black/10 pt-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold uppercase text-[#5a3a00]/70">Due Date</p>
+                  <p className="break-words font-heading text-[clamp(1.35rem,6vw,2.25rem)] text-[#5a3a00]">{dueDate}</p>
+                </div>
+                <Link
+                  to="/student/fees"
+                  className="w-full min-w-[6.25rem] rounded-xl bg-primary px-4 py-2.5 text-center text-[clamp(0.8rem,2.5vw,1rem)] font-semibold text-white hover:brightness-95 sm:w-auto"
+                >
+                  Pay Now
+                </Link>
+              </div>
             </div>
-          </div>
+          ) : null}
 
-          <div className="rounded-2xl bg-white p-6 shadow-card">
-            <h3 className="font-heading text-4xl text-primary">Latest Assessment</h3>
-            <div className="mt-5 flex items-center justify-between">
+          <div className="rounded-2xl bg-white p-[clamp(1rem,3vw,1.5rem)] shadow-card">
+            <h3 className="font-heading text-[clamp(1.35rem,5vw,2.25rem)] text-primary">Latest Assessment</h3>
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm text-slate-400">Class Rank</p>
-                <p className="font-heading text-5xl text-primary">
+                <p className="font-heading text-[clamp(1.75rem,7vw,3rem)] text-primary leading-tight">
                   --
-                  <span className="text-3xl text-slate-400">/--</span>
+                  <span className="text-[clamp(1.1rem,4vw,1.875rem)] text-slate-400">/--</span>
                 </p>
               </div>
-              <div className="h-14 w-px bg-slate-200" />
-              <div className="text-right">
+              <div className="hidden h-14 w-px bg-slate-200 sm:block" />
+              <div className="text-left sm:text-right">
                 <p className="text-sm text-slate-400">Grade</p>
-                <p className="font-heading text-5xl text-emerald-900">{topResult?.grade || "--"}</p>
+                <p className="font-heading text-[clamp(1.75rem,7vw,3rem)] leading-tight text-emerald-900">{topResult?.grade || "--"}</p>
               </div>
             </div>
             <div className="mt-6">
-              <div className="flex items-center justify-between text-xl">
-                <p className="text-slate-600">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[clamp(0.95rem,3.2vw,1.25rem)]">
+                <p className="break-words text-slate-600">
                   {topResult ? `${topResult.subject} (${String(topResult.examType || "").toLowerCase()})` : "No result yet"}
                 </p>
                 <p className="font-bold text-primary">
@@ -340,7 +361,7 @@ const StudentDashboard = () => {
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Weekly Schedule</p>
             <h2 className="mt-1 font-heading text-3xl text-primary">Class Timetable</h2>
           </div>
-          {timetableState.loading ? <span className="text-sm text-slate-500">Loading...</span> : null}
+          {timetableState.loading ? <div className="h-5 w-24 rounded-md bg-slate-200/70 skeleton-shimmer" aria-hidden="true" /> : null}
         </div>
 
         <div className="overflow-x-auto">
@@ -383,37 +404,37 @@ const StudentDashboard = () => {
         </div>
       </section>
 
-      <section className="grid gap-5 md:grid-cols-2">
+      <section className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
         <Link
-          to="/student/materials"
-          className="group flex items-center justify-between rounded-2xl bg-white p-6 shadow-card transition-colors hover:bg-slate-50"
+          to="/student/subjects"
+          className="group flex flex-col gap-4 rounded-2xl bg-white p-[clamp(1rem,3vw,1.5rem)] shadow-card transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
         >
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-2xl text-primary">📖</div>
-            <div>
-              <p className="font-heading text-4xl text-primary">Study Materials</p>
-              <p className="text-xl text-slate-600">Access video lectures & PDF notes for XII Science</p>
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-[clamp(1rem,4vw,1.5rem)] text-primary sm:h-14 sm:w-14">📖</div>
+            <div className="min-w-0">
+              <p className="break-words font-heading text-[clamp(1.1rem,4.5vw,2.25rem)] text-primary">Study Materials</p>
+              <p className="break-words text-[clamp(0.85rem,3vw,1.25rem)] text-slate-600">Access video lectures & PDF notes for XII Science</p>
             </div>
           </div>
-          <span className="text-3xl text-slate-400 group-hover:text-primary">›</span>
+          <span className="self-end text-2xl text-slate-400 group-hover:text-primary sm:self-auto sm:text-3xl">›</span>
         </Link>
 
         <Link
           to="/student/exams"
-          className="group flex items-center justify-between rounded-2xl bg-indigo-50 p-6 shadow-card transition-colors hover:bg-indigo-100"
+          className="group flex flex-col gap-4 rounded-2xl bg-indigo-50 p-[clamp(1rem,3vw,1.5rem)] shadow-card transition-colors hover:bg-indigo-100 sm:flex-row sm:items-center sm:justify-between"
         >
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-2xl text-white">🗓️</div>
-            <div>
-              <p className="font-heading text-4xl text-primary">Upcoming Exams</p>
-              <p className="text-xl text-slate-600">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-[clamp(1rem,4vw,1.5rem)] text-white sm:h-14 sm:w-14">🗓️</div>
+            <div className="min-w-0">
+              <p className="break-words font-heading text-[clamp(1.1rem,4.5vw,2.25rem)] text-primary">Upcoming Exams</p>
+              <p className="break-words text-[clamp(0.85rem,3vw,1.25rem)] text-slate-600">
                 {upcomingExam
                   ? `${upcomingExam.subject}: ${new Date(upcomingExam.date).toLocaleDateString()}`
                   : `${stats.upcomingExams || 0} exams scheduled`}
               </p>
             </div>
           </div>
-          <span className="text-3xl text-slate-400 group-hover:text-primary">›</span>
+          <span className="self-end text-2xl text-slate-400 group-hover:text-primary sm:self-auto sm:text-3xl">›</span>
         </Link>
       </section>
     </div>

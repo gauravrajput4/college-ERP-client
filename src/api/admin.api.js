@@ -8,7 +8,7 @@ export const updateStudent = async (id, data) => (await api.put(`/admin/students
 export const deleteStudent = async (id) => (await api.delete(`/admin/students/${id}`)).data;
 
 export const getTeachers = async (params) => (await api.get("/admin/teachers", { params })).data;
-export const createTeacher = async (data) => (await api.post("/admin/teachers", data)).data;
+export const createTeacher = async (data) => (await api.post("/teachers", data)).data;
 export const updateTeacher = async (id, data) => (await api.put(`/admin/teachers/${id}`, data)).data;
 export const deleteTeacher = async (id) => (await api.delete(`/admin/teachers/${id}`)).data;
 
@@ -26,7 +26,7 @@ export const upsertClassCatalog = async (data) => (await api.post("/admin/class-
 export const deleteClassCatalog = async (id) => (await api.delete(`/admin/class-catalog/${id}`)).data;
 export const getTimetables = async (params) => (await api.get("/admin/timetables", { params })).data;
 export const getAvailableTeachers = async (params) =>
-  (await api.get("/admin/timetables/available-teachers", { params })).data;
+  (await api.get("/teachers/available", { params })).data;
 export const createTimetable = async (data) => (await api.post("/admin/timetables", data)).data;
 export const updateTimetable = async (id, data) => (await api.put(`/admin/timetables/${id}`, data)).data;
 export const deleteTimetable = async (id) => (await api.delete(`/admin/timetables/${id}`)).data;
@@ -38,6 +38,7 @@ export const deleteExamSchedule = async (id) => (await api.delete(`/admin/exams/
 
 export const getResults = async (params) => (await api.get("/admin/results", { params })).data;
 export const getAttendanceReport = async (params) => (await api.get("/admin/reports/attendance", { params })).data;
+export const getAttendanceOverview = async (params) => (await api.get("/admin/attendance/overview", { params })).data;
 export const getResultsReport = async (params) => (await api.get("/admin/reports/results", { params })).data;
 
 export const getNotices = async () => (await api.get("/admin/notices")).data;

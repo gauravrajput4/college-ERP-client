@@ -236,7 +236,7 @@ const FeeManagement = () => {
       <section className="rounded-xl bg-white p-4 shadow-card">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-primary">Saved Academic Fee Master</h2>
-          {courseFeesState.loading ? <span className="text-sm text-slate-500">Loading...</span> : null}
+          {courseFeesState.loading ? <div className="h-5 w-24 rounded-md bg-slate-200/70 skeleton-shimmer" aria-hidden="true" /> : null}
         </div>
         <Table
           data={courseFeesState.data || []}
